@@ -37,16 +37,17 @@ for_1:
   mov eax, sys_read
   syscall
   mov r8, rax
+  mov r9, r8
   xor rcx, rcx
   for_2:
     mov al, byte [rsp+rcx]
     call check_char
     mov [rsp+rcx], al
     inc rcx
-    cmp rcx, r8
+    cmp rcx, r9
     jb for_2
 
-  mov rdx, r8
+  mov rdx, r9
   mov rdi, STDOUT
   lea rsi, [rsp]
   mov eax, sys_write
@@ -74,23 +75,31 @@ check_char_for:
   inc rcx
   cmp rcx, [src_len]
   jb check_char_for
-  jmp _end
+  jmp check_end
 matched:
   cmp rcx, [dst_len]
   jbe to_dst_char
-  jmp to_
+  jmp to_void
 to_dst_char:
   lea rdx, [chars_dst]
   mov rdx, [rdx]
   add rdx, rcx
   mov al, byte [rdx]
-  jmp _end
-to_:
-  mov al, 0x5f ; '_'
-_end:
+  jmp check_end
+to_void:
   pop rcx
-  ret
- 
+  push rcx
+  check_for:
+    mov rbx, [rsp+rcx+1]
+    mov [rsp+rcx], rbx
+    inc rcx
+    cmp rcx, r9
+    je check_for 
+  dec r9
+check_end:
+  pop rcx
+  ret 
+
     
 
 exit_with_mes:
